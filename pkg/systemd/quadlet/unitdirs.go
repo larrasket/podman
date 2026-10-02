@@ -106,6 +106,12 @@ func getDirsFromEnv(paths *searchPaths) bool {
 }
 
 func AppendSubPaths(paths *searchPaths, path string, isUserFlag bool, filterPtr func(string, bool) bool) {
+	// Filter the path before resolving it too: a users/<UID> directory that is a
+	// symlink to a directory outside of users/ is not caught by the filter once resolved.
+	if filterPtr != nil && !filterPtr(path, isUserFlag) {
+		return
+	}
+
 	resolvedPath, err := filepath.EvalSymlinks(path)
 	if err != nil {
 		if !errors.Is(err, fs.ErrNotExist) {

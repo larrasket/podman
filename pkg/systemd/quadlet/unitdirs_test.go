@@ -210,6 +210,9 @@ func TestUnitDirs(t *testing.T) {
 		uidDir := createDir(userDir, u.Uid)
 		uidDir2 := createDir(userDir, strconv.Itoa(uidInt+1))
 		userInternalDir := createDir(userDir, "internal")
+		// users/<UID> may be a symlink to a directory outside of users
+		uidLinkTarget := createDir("/", "uidlinktarget")
+		linkDir(userDir, strconv.Itoa(uidInt+2), uidLinkTarget)
 
 		distroSystemdDir := createDir("/", "systemd2")
 		distroUserDir := createDir("/", "users2")
@@ -232,6 +235,7 @@ func TestUnitDirs(t *testing.T) {
 		// Test Rootless
 		unitDirs = GetUnitDirs(true, true)
 		assert.NotContains(t, unitDirs, uidDir2, "rootless should not contain other users'")
+		assert.NotContains(t, unitDirs, uidLinkTarget, "rootless should not contain other users' symlinked dirs")
 		assert.Contains(t, unitDirs, userInternalDir, "rootless should contain sub-directories of users dir")
 		assert.Contains(t, unitDirs, uidDir, "rootless should contain the directory for its UID")
 		assert.NotContains(t, unitDirs, distroUidDir2, "rootless should not contain other distro users' dirs")
